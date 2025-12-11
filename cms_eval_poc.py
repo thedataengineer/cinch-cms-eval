@@ -760,7 +760,7 @@ Pursue **Option B (Pure Headless)** for long-term flexibility and modern DX, wit
 
 st.markdown("---")
 st.markdown("""
-**Built with:** Python, Streamlit, Ollama, Playwright  
+**Built with:** Python, Streamlit, OpenAI GPT-4  
 **Ontology Version:** 1.0  
 **Last Updated:** 2025-12-11
 """)
