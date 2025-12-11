@@ -865,33 +865,75 @@ Return as structured JSON.
 with tab5:
     st.header("📄 Evaluation Report & Export")
     
-    # Generate report content
-    report_content = f"""
+    # Get dynamic content from session state
+    custom_context = st.session_state.get('custom_context', 'No custom context provided')
+    stack_recs = st.session_state.get('stack_recommendations', None)
+    
+    # Build use case labels
+    use_case_labels = [CMS_ONTOLOGY['use_cases'][uc]['label'] for uc in selected_use_cases]
+    
+    # Check if AI analysis has been run
+    if not stack_recs:
+        st.warning("⚠️ **No AI analysis data yet.** Run 'AI Stack Recommendations' in the 🏗️ Recommended Stacks tab to generate dynamic content for this report.")
+    
+    # Build dynamic report content
+    report_sections = []
+    
+    # Header
+    report_sections.append(f"""
 # Home Warranty CMS Evaluation Report
 **Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-
-## Executive Summary
-The company is evaluating headless and composable CMS solutions to consolidate 5 legacy platforms (HubSpot, Liferay, Ion, Starmark, Surefire) into 3 unified platforms. The primary goal is to improve conversion optimization and enrollment rates for a site receiving ~20K paid views/day.
-
-## Current State
-- **Primary CMS:** HubSpot (underperforming for conversions)
-- **Legacy Systems:** Liferay, Ion (~9 years), Starmark (~9 years), Surefire
-- **Traffic:** ~20,000 paid views/day, 6,000-7,000 unique visitors
-- **Goal:** Consolidate to 3 platforms, improve conversion rates
-
+""")
+    
+    # Business Context from user input
+    report_sections.append(f"""
+## Business Context (Your Input)
+{custom_context}
+""")
+    
+    # Selected Use Cases
+    report_sections.append(f"""
 ## Selected Use Cases
-{chr(10).join(['- ' + CMS_ONTOLOGY['use_cases'][uc]['label'] for uc in selected_use_cases])}
+{chr(10).join(['- ' + uc for uc in use_case_labels])}
+""")
+    
+    # AI-Generated Stack Recommendations (if available)
+    if stack_recs:
+        report_sections.append("## AI-Recommended Technology Stacks")
+        
+        if "top_recommendation" in stack_recs:
+            report_sections.append(f"**🏆 Top Recommendation:** {stack_recs['top_recommendation']}")
+        
+        if "migration_strategy" in stack_recs:
+            report_sections.append(f"**📋 Migration Strategy:** {stack_recs['migration_strategy']}")
+        
+        for i, stack in enumerate(stack_recs.get("recommended_stacks", [])[:3]):
+            report_sections.append(f"""
+### Option {chr(65+i)}: {stack.get('name', 'Stack')}
+- **Fit Score:** {stack.get('fit_score', 'N/A'):.2f}
+- **Components:** {', '.join(stack.get('components', []))}
+- **Timeline:** {stack.get('timeline_months', '?')} months
+- **Cost Tier:** {stack.get('cost_tier', '$$')}
+- **Best For:** {stack.get('best_for', 'General use')}
 
+**Pros:**
+{chr(10).join(['- ' + pro for pro in stack.get('pros', [])])}
+
+**Cons:**
+{chr(10).join(['- ' + con for con in stack.get('cons', [])])}
+""")
+    else:
+        report_sections.append("""
 ## Key Findings
-- **Best overall fit:** Composable CMS + HubSpot CRM
-- **Best headless-only fit:** Contentful
-- **Best for quick wins:** HubSpot + Headless hybrid
+*Run AI analysis to generate personalized findings*
 
 ## Recommendation
-Pursue a **phased migration** approach using the Strangler Fig pattern to gradually replace legacy systems while maintaining business continuity.
-"""
+*Run AI Stack Recommendations to get personalized recommendations*
+""")
     
-    st.markdown(report_content)
+    # Combine and display
+    full_report = chr(10).join(report_sections)
+    st.markdown(full_report)
     
     st.markdown("---")
     st.subheader("📥 Export Options")
@@ -939,88 +981,101 @@ Pursue a **phased migration** approach using the Strangler Fig pattern to gradua
     
     with col2:
         if st.button("📊 Export to PPTX", type="primary"):
-            try:
-                from pptx import Presentation
-                from pptx.util import Inches, Pt
-                import io
-                
-                prs = Presentation()
-                
-                # Slide 1: Title
-                slide = prs.slides.add_slide(prs.slide_layouts[0])
-                title = slide.shapes.title
-                title.text = "CMS Evaluation Report"
-                subtitle = slide.placeholders[1]
-                subtitle.text = f"Home Warranty Company | {datetime.now().strftime('%B %Y')}"
-                
-                # Slide 2: Executive Summary
-                slide = prs.slides.add_slide(prs.slide_layouts[1])
-                slide.shapes.title.text = "Executive Summary"
-                body = slide.placeholders[1]
-                tf = body.text_frame
-                tf.text = "Current Situation:"
-                p = tf.add_paragraph()
-                p.text = "• Operating across 5 CMS platforms"
-                p = tf.add_paragraph()
-                p.text = "• HubSpot is underperforming for conversions"
-                p = tf.add_paragraph()
-                p.text = "• Traffic: 20,000+ paid views/day"
-                p = tf.add_paragraph()
-                p.text = "• Goal: Consolidate to 3 platforms"
-                
-                # Slide 3: Key Findings
-                slide = prs.slides.add_slide(prs.slide_layouts[1])
-                slide.shapes.title.text = "Key Findings"
-                body = slide.placeholders[1]
-                tf = body.text_frame
-                tf.text = "Best Overall: Composable CMS + HubSpot CRM"
-                p = tf.add_paragraph()
-                p.text = "Best Headless: Contentful"
-                p = tf.add_paragraph()
-                p.text = "Best Quick Win: HubSpot + Headless Hybrid"
-                
-                # Slide 4: Recommendation
-                slide = prs.slides.add_slide(prs.slide_layouts[1])
-                slide.shapes.title.text = "Recommendation"
-                body = slide.placeholders[1]
-                tf = body.text_frame
-                tf.text = "Strangler Fig Migration Pattern"
-                p = tf.add_paragraph()
-                p.text = "• Phased approach over 12-18 months"
-                p = tf.add_paragraph()
-                p.text = "• Phase 1: High-traffic landing pages"
-                p = tf.add_paragraph()
-                p.text = "• Phase 2: Enrollment funnels"
-                p = tf.add_paragraph()
-                p.text = "• Phase 3: Multi-property consolidation"
-                
-                # Slide 5: Next Steps
-                slide = prs.slides.add_slide(prs.slide_layouts[1])
-                slide.shapes.title.text = "Next Steps"
-                body = slide.placeholders[1]
-                tf = body.text_frame
-                tf.text = "1. Schedule vendor demos (Contentful, Sanity, Acquia)"
-                p = tf.add_paragraph()
-                p.text = "2. Run proof-of-concept on 2-3 landing pages"
-                p = tf.add_paragraph()
-                p.text = "3. Calculate detailed TCO for top 2 options"
-                p = tf.add_paragraph()
-                p.text = "4. Build migration roadmap with IT team"
-                p = tf.add_paragraph()
-                p.text = "5. Present final recommendation to leadership"
-                
-                buffer = io.BytesIO()
-                prs.save(buffer)
-                buffer.seek(0)
-                
-                st.download_button(
-                    label="⬇️ Download PPTX",
-                    data=buffer,
-                    file_name="cms_evaluation_report.pptx",
-                    mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                )
-            except Exception as e:
-                st.error(f"PPTX export error: {str(e)}")
+            if not stack_recs:
+                st.warning("⚠️ Run AI Stack Recommendations first to generate meaningful content")
+            else:
+                try:
+                    from pptx import Presentation
+                    from pptx.util import Inches, Pt
+                    import io
+                    
+                    prs = Presentation()
+                    
+                    # Slide 1: Title
+                    slide = prs.slides.add_slide(prs.slide_layouts[0])
+                    slide.shapes.title.text = "CMS Evaluation Report"
+                    slide.placeholders[1].text = f"Home Warranty Company | {datetime.now().strftime('%B %Y')}"
+                    
+                    # Slide 2: Business Context (from user input)
+                    slide = prs.slides.add_slide(prs.slide_layouts[1])
+                    slide.shapes.title.text = "Business Context"
+                    tf = slide.placeholders[1].text_frame
+                    context_lines = custom_context.split('\n')[:6]  # First 6 lines
+                    tf.text = context_lines[0] if context_lines else "CMS evaluation in progress"
+                    for line in context_lines[1:]:
+                        if line.strip():
+                            p = tf.add_paragraph()
+                            p.text = line.strip()
+                    
+                    # Slide 3: Selected Use Cases
+                    slide = prs.slides.add_slide(prs.slide_layouts[1])
+                    slide.shapes.title.text = "Priority Use Cases"
+                    tf = slide.placeholders[1].text_frame
+                    tf.text = use_case_labels[0] if use_case_labels else "No use cases selected"
+                    for uc in use_case_labels[1:]:
+                        p = tf.add_paragraph()
+                        p.text = f"• {uc}"
+                    
+                    # Slide 4: Top Recommendation
+                    slide = prs.slides.add_slide(prs.slide_layouts[1])
+                    slide.shapes.title.text = "🏆 Top Recommendation"
+                    tf = slide.placeholders[1].text_frame
+                    tf.text = stack_recs.get('top_recommendation', 'Run AI analysis for recommendations')
+                    if 'migration_strategy' in stack_recs:
+                        p = tf.add_paragraph()
+                        p.text = ""
+                        p = tf.add_paragraph()
+                        p.text = f"Migration Strategy: {stack_recs['migration_strategy']}"
+                    
+                    # Slides for each stack option
+                    for i, stack in enumerate(stack_recs.get('recommended_stacks', [])[:3]):
+                        slide = prs.slides.add_slide(prs.slide_layouts[1])
+                        slide.shapes.title.text = f"Option {chr(65+i)}: {stack.get('name', 'Stack')}"
+                        tf = slide.placeholders[1].text_frame
+                        
+                        tf.text = f"Fit Score: {stack.get('fit_score', 0):.2f} | Cost: {stack.get('cost_tier', '$$')} | Timeline: {stack.get('timeline_months', '?')} months"
+                        
+                        p = tf.add_paragraph()
+                        p.text = f"Components: {', '.join(stack.get('components', []))}"
+                        
+                        p = tf.add_paragraph()
+                        p.text = ""
+                        p = tf.add_paragraph()
+                        p.text = "✅ Pros:"
+                        for pro in stack.get('pros', [])[:3]:
+                            p = tf.add_paragraph()
+                            p.text = f"   • {pro}"
+                        
+                        p = tf.add_paragraph()
+                        p.text = "❌ Cons:"
+                        for con in stack.get('cons', [])[:2]:
+                            p = tf.add_paragraph()
+                            p.text = f"   • {con}"
+                    
+                    # Final slide: Next Steps
+                    slide = prs.slides.add_slide(prs.slide_layouts[1])
+                    slide.shapes.title.text = "Next Steps"
+                    tf = slide.placeholders[1].text_frame
+                    tf.text = "1. Schedule vendor demos for top recommended platforms"
+                    p = tf.add_paragraph()
+                    p.text = "2. Run proof-of-concept on 2-3 high-traffic pages"
+                    p = tf.add_paragraph()
+                    p.text = "3. Calculate detailed TCO for final 2 options"
+                    p = tf.add_paragraph()
+                    p.text = "4. Build migration roadmap with IT team"
+                    
+                    buffer = io.BytesIO()
+                    prs.save(buffer)
+                    buffer.seek(0)
+                    
+                    st.download_button(
+                        label="⬇️ Download PPTX",
+                        data=buffer,
+                        file_name="cms_evaluation_report.pptx",
+                        mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                    )
+                except Exception as e:
+                    st.error(f"PPTX export error: {str(e)}")
     
     with col3:
         if st.button("📑 Export to PDF", type="primary"):
