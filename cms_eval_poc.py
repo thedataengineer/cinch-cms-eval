@@ -941,150 +941,73 @@ Pursue a **phased migration** approach using the Strangler Fig pattern to gradua
         if st.button("📊 Export to PPTX", type="primary"):
             try:
                 from pptx import Presentation
-                from pptx.util import Inches, Pt, Emu
-                from pptx.util import RGBColor  # Correct import path
-                from pptx.enum.text import PP_ALIGN
+                from pptx.util import Inches, Pt
                 import io
                 
                 prs = Presentation()
-                prs.slide_width = Inches(13.333)
-                prs.slide_height = Inches(7.5)
-                
-                # Helper to style text
-                def style_title(shape, font_size=44, bold=True):
-                    for paragraph in shape.text_frame.paragraphs:
-                        paragraph.font.size = Pt(font_size)
-                        paragraph.font.bold = bold
-                        paragraph.font.color.rgb = RGBColor(0x1E, 0x3A, 0x5F)  # Dark blue
-                
-                def style_body(shape, font_size=24):
-                    for paragraph in shape.text_frame.paragraphs:
-                        paragraph.font.size = Pt(font_size)
-                        paragraph.font.color.rgb = RGBColor(0x33, 0x33, 0x33)  # Dark gray
                 
                 # Slide 1: Title
-                slide = prs.slides.add_slide(prs.slide_layouts[6])  # Blank
-                title_box = slide.shapes.add_textbox(Inches(0.5), Inches(2.5), Inches(12), Inches(2))
-                tf = title_box.text_frame
-                tf.text = "CMS Evaluation Report"
-                tf.paragraphs[0].font.size = Pt(54)
-                tf.paragraphs[0].font.bold = True
-                tf.paragraphs[0].font.color.rgb = RGBColor(0x1E, 0x3A, 0x5F)
-                tf.paragraphs[0].alignment = PP_ALIGN.CENTER
-                
-                subtitle = slide.shapes.add_textbox(Inches(0.5), Inches(4.5), Inches(12), Inches(1))
-                stf = subtitle.text_frame
-                stf.text = f"Home Warranty Company | {datetime.now().strftime('%B %Y')}"
-                stf.paragraphs[0].font.size = Pt(28)
-                stf.paragraphs[0].font.color.rgb = RGBColor(0x66, 0x66, 0x66)
-                stf.paragraphs[0].alignment = PP_ALIGN.CENTER
+                slide = prs.slides.add_slide(prs.slide_layouts[0])
+                title = slide.shapes.title
+                title.text = "CMS Evaluation Report"
+                subtitle = slide.placeholders[1]
+                subtitle.text = f"Home Warranty Company | {datetime.now().strftime('%B %Y')}"
                 
                 # Slide 2: Executive Summary
-                slide = prs.slides.add_slide(prs.slide_layouts[6])
-                title = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(12), Inches(1))
-                title.text_frame.text = "📋 Executive Summary"
-                style_title(title, 40)
-                
-                body = slide.shapes.add_textbox(Inches(0.5), Inches(1.5), Inches(12), Inches(5))
+                slide = prs.slides.add_slide(prs.slide_layouts[1])
+                slide.shapes.title.text = "Executive Summary"
+                body = slide.placeholders[1]
                 tf = body.text_frame
-                tf.word_wrap = True
-                p = tf.paragraphs[0]
-                p.text = "Current Situation"
-                p.font.bold = True
-                p.font.size = Pt(28)
-                p.font.color.rgb = RGBColor(0x2E, 0x86, 0xAB)
-                
-                bullets = ["• Operating across 5 CMS platforms (HubSpot, Liferay, Ion, Starmark, Surefire)",
-                          "• HubSpot is underperforming for conversion optimization",
-                          "• Traffic: 20,000+ paid views/day, 6-7K unique visitors",
-                          "• Goal: Consolidate to 3 platforms, improve conversions by 10%+"]
-                for bullet in bullets:
-                    p = tf.add_paragraph()
-                    p.text = bullet
-                    p.font.size = Pt(22)
-                    p.space_before = Pt(12)
+                tf.text = "Current Situation:"
+                p = tf.add_paragraph()
+                p.text = "• Operating across 5 CMS platforms"
+                p = tf.add_paragraph()
+                p.text = "• HubSpot is underperforming for conversions"
+                p = tf.add_paragraph()
+                p.text = "• Traffic: 20,000+ paid views/day"
+                p = tf.add_paragraph()
+                p.text = "• Goal: Consolidate to 3 platforms"
                 
                 # Slide 3: Key Findings
-                slide = prs.slides.add_slide(prs.slide_layouts[6])
-                title = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(12), Inches(1))
-                title.text_frame.text = "🔍 Key Findings"
-                style_title(title, 40)
-                
-                findings = [
-                    ("✅ Best Overall Fit", "Composable CMS + HubSpot CRM", "Balances flexibility with existing investment"),
-                    ("✅ Best Headless Option", "Contentful", "Superior API-first architecture for modern DX"),
-                    ("✅ Best Quick Win", "HubSpot + Headless Hybrid", "Leverage existing platform while modernizing")
-                ]
-                y_pos = 1.5
-                for heading, platform, desc in findings:
-                    box = slide.shapes.add_textbox(Inches(0.5), Inches(y_pos), Inches(12), Inches(1.5))
-                    tf = box.text_frame
-                    p = tf.paragraphs[0]
-                    p.text = f"{heading}: {platform}"
-                    p.font.size = Pt(26)
-                    p.font.bold = True
-                    p.font.color.rgb = RGBColor(0x28, 0xA7, 0x45)
-                    p = tf.add_paragraph()
-                    p.text = desc
-                    p.font.size = Pt(20)
-                    p.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
-                    y_pos += 1.8
-                
-                # Slide 4: Migration Strategy
-                slide = prs.slides.add_slide(prs.slide_layouts[6])
-                title = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(12), Inches(1))
-                title.text_frame.text = "🚀 Recommended Approach"
-                style_title(title, 40)
-                
-                body = slide.shapes.add_textbox(Inches(0.5), Inches(1.5), Inches(12), Inches(5))
+                slide = prs.slides.add_slide(prs.slide_layouts[1])
+                slide.shapes.title.text = "Key Findings"
+                body = slide.placeholders[1]
                 tf = body.text_frame
-                tf.word_wrap = True
+                tf.text = "Best Overall: Composable CMS + HubSpot CRM"
+                p = tf.add_paragraph()
+                p.text = "Best Headless: Contentful"
+                p = tf.add_paragraph()
+                p.text = "Best Quick Win: HubSpot + Headless Hybrid"
                 
-                strategies = [
-                    "🌿 Strangler Fig Migration Pattern",
-                    "   Gradually replace legacy systems without big-bang risk",
-                    "",
-                    "📅 Phased Approach (12-18 months)",
-                    "   Phase 1: High-traffic landing pages (3 months)",
-                    "   Phase 2: Enrollment funnels (6 months)",
-                    "   Phase 3: Multi-property consolidation (9 months)",
-                    "",
-                    "💰 Investment Range: Mid-tier ($50K-150K implementation)"
-                ]
-                for i, line in enumerate(strategies):
-                    if i == 0:
-                        p = tf.paragraphs[0]
-                    else:
-                        p = tf.add_paragraph()
-                    p.text = line
-                    p.font.size = Pt(22) if not line.startswith("   ") else Pt(18)
-                    p.font.bold = not line.startswith("   ") and line != ""
-                    p.font.color.rgb = RGBColor(0x1E, 0x3A, 0x5F) if not line.startswith("   ") else RGBColor(0x55, 0x55, 0x55)
+                # Slide 4: Recommendation
+                slide = prs.slides.add_slide(prs.slide_layouts[1])
+                slide.shapes.title.text = "Recommendation"
+                body = slide.placeholders[1]
+                tf = body.text_frame
+                tf.text = "Strangler Fig Migration Pattern"
+                p = tf.add_paragraph()
+                p.text = "• Phased approach over 12-18 months"
+                p = tf.add_paragraph()
+                p.text = "• Phase 1: High-traffic landing pages"
+                p = tf.add_paragraph()
+                p.text = "• Phase 2: Enrollment funnels"
+                p = tf.add_paragraph()
+                p.text = "• Phase 3: Multi-property consolidation"
                 
                 # Slide 5: Next Steps
-                slide = prs.slides.add_slide(prs.slide_layouts[6])
-                title = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(12), Inches(1))
-                title.text_frame.text = "📌 Next Steps"
-                style_title(title, 40)
-                
-                body = slide.shapes.add_textbox(Inches(0.5), Inches(1.5), Inches(12), Inches(5))
+                slide = prs.slides.add_slide(prs.slide_layouts[1])
+                slide.shapes.title.text = "Next Steps"
+                body = slide.placeholders[1]
                 tf = body.text_frame
-                steps = [
-                    "1️⃣  Schedule vendor demos (Contentful, Sanity, Acquia)",
-                    "2️⃣  Run proof-of-concept on 2-3 landing pages",
-                    "3️⃣  Calculate detailed TCO for top 2 options",
-                    "4️⃣  Build migration roadmap with IT team",
-                    "5️⃣  Present final recommendation to leadership"
-                ]
-                for i, step in enumerate(steps):
-                    if i == 0:
-                        p = tf.paragraphs[0]
-                    else:
-                        p = tf.add_paragraph()
-                    p.text = step
-                    p.font.size = Pt(26)
-                    p.space_before = Pt(18)
-                    p.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
+                tf.text = "1. Schedule vendor demos (Contentful, Sanity, Acquia)"
+                p = tf.add_paragraph()
+                p.text = "2. Run proof-of-concept on 2-3 landing pages"
+                p = tf.add_paragraph()
+                p.text = "3. Calculate detailed TCO for top 2 options"
+                p = tf.add_paragraph()
+                p.text = "4. Build migration roadmap with IT team"
+                p = tf.add_paragraph()
+                p.text = "5. Present final recommendation to leadership"
                 
                 buffer = io.BytesIO()
                 prs.save(buffer)
@@ -1096,8 +1019,8 @@ Pursue a **phased migration** approach using the Strangler Fig pattern to gradua
                     file_name="cms_evaluation_report.pptx",
                     mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
                 )
-            except ImportError:
-                st.error("python-pptx not installed")
+            except Exception as e:
+                st.error(f"PPTX export error: {str(e)}")
     
     with col3:
         if st.button("📑 Export to PDF", type="primary"):
