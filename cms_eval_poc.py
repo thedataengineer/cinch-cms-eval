@@ -1,6 +1,6 @@
 """
-CINCH CMS Evaluation Framework – Streamlit PoC
-Interactive tool to evaluate and score CMS platforms against CINCH requirements
+Home Warranty CMS Evaluation Framework – Streamlit PoC
+Interactive tool to evaluate and score CMS platforms for Home Warranty company requirements
 """
 
 import json
@@ -262,17 +262,17 @@ PLATFORMS_DATA = {
 # STREAMLIT UI
 # ============================================================================
 
-st.set_page_config(page_title="CINCH CMS Evaluation", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Home Warranty CMS Evaluation", layout="wide", initial_sidebar_state="expanded")
 
-st.title("🎯 CINCH CMS Evaluation Framework")
-st.markdown("**Interactive tool to evaluate and score CMS platforms for CINCH's consolidation strategy**")
+st.title("🎯 Home Warranty CMS Evaluation Framework")
+st.markdown("**Interactive tool to evaluate and score CMS platforms for consolidation strategy**")
 
 # Sidebar: Controls
 with st.sidebar:
     st.header("⚙️ Evaluation Settings")
     
     selected_use_cases = st.multiselect(
-        "Select CINCH Use Cases:",
+        "Select Use Cases:",
         options=list(CMS_ONTOLOGY["use_cases"].keys()),
         default=list(CMS_ONTOLOGY["use_cases"].keys()),
         format_func=lambda x: CMS_ONTOLOGY["use_cases"][x]["label"]
@@ -692,7 +692,7 @@ with tab3:
 
 with tab4:
     st.header("🏗️ AI-Recommended Architecture Stacks")
-    st.markdown("**Get personalized stack recommendations based on CINCH's specific requirements**")
+    st.markdown("**Get personalized stack recommendations based on your specific requirements**")
     
     # Initialize session state for stack recommendations
     if 'stack_recommendations' not in st.session_state:
@@ -838,41 +838,181 @@ Return as structured JSON.
             
             st.markdown("---")
     else:
-        st.info("👆 Click the button above to generate AI-powered stack recommendations based on CINCH's specific requirements.")
+        st.info("👆 Click the button above to generate AI-powered stack recommendations based on your specific requirements.")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TAB 4: Report
+# TAB 5: Report & Export
 # ─────────────────────────────────────────────────────────────────────────────
 
 with tab5:
-    st.header("📄 Evaluation Report")
+    st.header("📄 Evaluation Report & Export")
     
-    report_format = st.radio("Export Format:", ["View in Streamlit", "Generate DOCX"])
-    
-    if report_format == "View in Streamlit":
-        st.markdown(f"""
-## CINCH CMS Evaluation Report
+    # Generate report content
+    report_content = f"""
+# Home Warranty CMS Evaluation Report
 **Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
-### Executive Summary
-CINCH is evaluating headless and composable CMS solutions to consolidate 5 legacy platforms (HubSpot, Liferay, Ion, Starmark, Surefire) into 3 unified platforms. The primary goal is to improve conversion optimization and enrollment rates for a site receiving ~20K paid views/day.
+## Executive Summary
+The company is evaluating headless and composable CMS solutions to consolidate 5 legacy platforms (HubSpot, Liferay, Ion, Starmark, Surefire) into 3 unified platforms. The primary goal is to improve conversion optimization and enrollment rates for a site receiving ~20K paid views/day.
 
-### Key Findings
-- **Best overall fit: Composable CMS + HubSpot CRM**
-- **Best headless-only fit: Contentful**
-- **Best for quick wins: HubSpot + Headless hybrid**
+## Current State
+- **Primary CMS:** HubSpot (underperforming for conversions)
+- **Legacy Systems:** Liferay, Ion (~9 years), Starmark (~9 years), Surefire
+- **Traffic:** ~20,000 paid views/day, 6,000-7,000 unique visitors
+- **Goal:** Consolidate to 3 platforms, improve conversion rates
 
-### Selected Use Cases
-{', '.join(CMS_ONTOLOGY['use_cases'][uc]['label'] for uc in selected_use_cases)}
+## Selected Use Cases
+{chr(10).join(['- ' + CMS_ONTOLOGY['use_cases'][uc]['label'] for uc in selected_use_cases])}
 
-### Recommendation
-Pursue **Option B (Pure Headless)** for long-term flexibility and modern DX, with a phased migration from legacy systems.
-        """)
+## Key Findings
+- **Best overall fit:** Composable CMS + HubSpot CRM
+- **Best headless-only fit:** Contentful
+- **Best for quick wins:** HubSpot + Headless hybrid
+
+## Recommendation
+Pursue a **phased migration** approach using the Strangler Fig pattern to gradually replace legacy systems while maintaining business continuity.
+"""
     
-    else:
-        st.info("📥 DOCX export feature coming soon. Use 'View in Streamlit' to see the report content.")
-        if st.button("Generate DOCX Report"):
-            st.write("Install python-docx to enable DOCX export: `pip install python-docx`")
+    st.markdown(report_content)
+    
+    st.markdown("---")
+    st.subheader("📥 Export Options")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("📄 Export to DOCX", type="primary"):
+            try:
+                from docx import Document
+                from docx.shared import Inches, Pt
+                import io
+                
+                doc = Document()
+                doc.add_heading('Home Warranty CMS Evaluation Report', 0)
+                doc.add_paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                
+                doc.add_heading('Executive Summary', level=1)
+                doc.add_paragraph('The company is evaluating headless and composable CMS solutions to consolidate 5 legacy platforms into 3 unified platforms.')
+                
+                doc.add_heading('Current State', level=1)
+                doc.add_paragraph('• Primary CMS: HubSpot (underperforming)')
+                doc.add_paragraph('• Legacy Systems: Liferay, Ion, Starmark, Surefire')
+                doc.add_paragraph('• Traffic: ~20K paid views/day')
+                
+                doc.add_heading('Selected Use Cases', level=1)
+                for uc in selected_use_cases:
+                    doc.add_paragraph(f"• {CMS_ONTOLOGY['use_cases'][uc]['label']}", style='List Bullet')
+                
+                doc.add_heading('Recommendation', level=1)
+                doc.add_paragraph('Pursue a phased migration using the Strangler Fig pattern.')
+                
+                buffer = io.BytesIO()
+                doc.save(buffer)
+                buffer.seek(0)
+                
+                st.download_button(
+                    label="⬇️ Download DOCX",
+                    data=buffer,
+                    file_name="cms_evaluation_report.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                )
+            except ImportError:
+                st.error("python-docx not installed")
+    
+    with col2:
+        if st.button("📊 Export to PPTX", type="primary"):
+            try:
+                from pptx import Presentation
+                from pptx.util import Inches, Pt
+                import io
+                
+                prs = Presentation()
+                
+                # Title slide
+                slide = prs.slides.add_slide(prs.slide_layouts[0])
+                slide.shapes.title.text = "Home Warranty CMS Evaluation"
+                slide.placeholders[1].text = f"Generated: {datetime.now().strftime('%Y-%m-%d')}"
+                
+                # Executive Summary slide
+                slide = prs.slides.add_slide(prs.slide_layouts[1])
+                slide.shapes.title.text = "Executive Summary"
+                slide.placeholders[1].text = "• Consolidating 5 CMS platforms to 3\n• Primary goal: Improve conversion rates\n• Traffic: 20K paid views/day\n• Current CMS (HubSpot) underperforming"
+                
+                # Key Findings slide
+                slide = prs.slides.add_slide(prs.slide_layouts[1])
+                slide.shapes.title.text = "Key Findings"
+                slide.placeholders[1].text = "• Best overall: Composable CMS + HubSpot CRM\n• Best headless: Contentful\n• Best quick wins: HubSpot + Headless hybrid"
+                
+                # Recommendation slide
+                slide = prs.slides.add_slide(prs.slide_layouts[1])
+                slide.shapes.title.text = "Recommendation"
+                slide.placeholders[1].text = "• Use Strangler Fig migration pattern\n• Phased approach over 12-18 months\n• Start with highest-traffic landing pages"
+                
+                buffer = io.BytesIO()
+                prs.save(buffer)
+                buffer.seek(0)
+                
+                st.download_button(
+                    label="⬇️ Download PPTX",
+                    data=buffer,
+                    file_name="cms_evaluation_report.pptx",
+                    mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                )
+            except ImportError:
+                st.error("python-pptx not installed")
+    
+    with col3:
+        if st.button("📑 Export to PDF", type="primary"):
+            try:
+                from reportlab.lib.pagesizes import letter
+                from reportlab.pdfgen import canvas
+                from reportlab.lib.units import inch
+                import io
+                
+                buffer = io.BytesIO()
+                c = canvas.Canvas(buffer, pagesize=letter)
+                width, height = letter
+                
+                # Title
+                c.setFont("Helvetica-Bold", 20)
+                c.drawString(1*inch, height - 1*inch, "Home Warranty CMS Evaluation Report")
+                
+                c.setFont("Helvetica", 12)
+                c.drawString(1*inch, height - 1.5*inch, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                
+                # Executive Summary
+                c.setFont("Helvetica-Bold", 14)
+                c.drawString(1*inch, height - 2.5*inch, "Executive Summary")
+                c.setFont("Helvetica", 11)
+                c.drawString(1*inch, height - 3*inch, "Consolidating 5 CMS platforms to 3 unified platforms.")
+                c.drawString(1*inch, height - 3.3*inch, "Primary goal: Improve conversion rates by 10%+")
+                c.drawString(1*inch, height - 3.6*inch, "Traffic: ~20,000 paid views/day")
+                
+                # Key Findings
+                c.setFont("Helvetica-Bold", 14)
+                c.drawString(1*inch, height - 4.5*inch, "Key Findings")
+                c.setFont("Helvetica", 11)
+                c.drawString(1*inch, height - 5*inch, "• Best overall: Composable CMS + HubSpot CRM")
+                c.drawString(1*inch, height - 5.3*inch, "• Best headless: Contentful")
+                c.drawString(1*inch, height - 5.6*inch, "• Best quick wins: HubSpot + Headless hybrid")
+                
+                # Recommendation
+                c.setFont("Helvetica-Bold", 14)
+                c.drawString(1*inch, height - 6.5*inch, "Recommendation")
+                c.setFont("Helvetica", 11)
+                c.drawString(1*inch, height - 7*inch, "Pursue phased migration using Strangler Fig pattern")
+                
+                c.save()
+                buffer.seek(0)
+                
+                st.download_button(
+                    label="⬇️ Download PDF",
+                    data=buffer,
+                    file_name="cms_evaluation_report.pdf",
+                    mime="application/pdf"
+                )
+            except ImportError:
+                st.error("reportlab not installed")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Footer
