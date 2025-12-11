@@ -510,7 +510,9 @@ Return as structured JSON matching the schema provided.
                 except Exception as e:
                     st.error(f"Error calling {provider.name}: {e}")
                     if provider_type == "Ollama (Local)":
-                        st.info("💡 Tips: Make sure Ollama is running (`ollama serve`) and the model is pulled (`ollama pull " + ollama_model + "`).")
+                        st.info("💡 Tip: Make sure Ollama is running (`ollama serve`) and the model is pulled (`ollama pull " + ollama_model + "`).")
+                    elif provider_type == "OpenAI (Cloud)":
+                        st.info("💡 Tip: Make sure your OPENAI_API_KEY is set in Streamlit secrets or as an environment variable.")
                     else:
                         st.info("💡 Tip: Make sure your ANTHROPIC_API_KEY is set as an environment variable.")
 
