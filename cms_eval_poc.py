@@ -457,7 +457,7 @@ with tab1:
                     
                     # Build use case context from selection
                     use_case_context = "\n".join([
-                        f"- {CMS_ONTOLOGY['use_cases'][uc]['label']}: {CMS_ONTOLOGY['use_cases'][uc]['description']}"
+                        f"- {CMS_ONTOLOGY['use_cases'][uc]['label']}"
                         for uc in selected_use_cases
                     ])
                     
