@@ -1,0 +1,19 @@
+# LLM Provider Configuration
+# ===========================
+
+# Provider selection: "ollama" (local) or "anthropic" (cloud API)
+LLM_PROVIDER="ollama"
+
+# Ollama settings (Docker container on high port)
+OLLAMA_MODEL="llama3.1"
+OLLAMA_HOST="http://localhost:11444"
+
+# Anthropic API settings (for Claude)
+# ANTHROPIC_API_KEY="sk-ant-..."
+# Get your key from https://console.anthropic.com/
+
+# Optional: Override Claude model
+# CLAUDE_MODEL="claude-3-5-sonnet-20241022"
+
+# Optional: Custom CINCH context
+# CINCH_CONTEXT_FILE="data/cinch_context.json"
