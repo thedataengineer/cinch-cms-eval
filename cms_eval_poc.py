@@ -455,23 +455,49 @@ with tab1:
                         "required": ["platform", "overall_fit_score", "strengths", "weaknesses", "best_for_use_case"]
                     }
                     
+                    # Build use case context from selection
+                    use_case_context = "\n".join([
+                        f"- {CMS_ONTOLOGY['use_cases'][uc]['label']}: {CMS_ONTOLOGY['use_cases'][uc]['description']}"
+                        for uc in selected_use_cases
+                    ])
+                    
                     prompt = f"""
-You are a CMS evaluation expert. Assess the following CMS platform against CINCH's requirements:
-- 20K+ paid views/day, 6K-7K unique visitors
-- Need to improve conversions and drive enrollments
-- Currently spread across 5 CMS (HubSpot, Liferay, Ion, Starmark, Surefire)
-- Want to consolidate but accept 3-platform reality
-- Avoid Sitecore-scale monolith, avoid lightweight/free tools
-- Interested in headless/composable approach
+You are evaluating CMS platforms for CINCH, a company with these SPECIFIC requirements:
 
-Platforms to assess: {', '.join(PLATFORMS_DATA.keys())}
+## BUSINESS CONTEXT
+- 20K+ paid landing page views/day, 6K-7K unique visitors
+- Primary goal: IMPROVE CONVERSION RATES by 10%+
+- Currently fragmented across 5 CMS platforms (HubSpot, Liferay, Ion, Starmark, Surefire)
+- Target: Consolidate to 3 unified platforms
+- Budget: Mid-range (avoid Sitecore-scale enterprise, avoid free/lightweight tools)
+- Technical preference: Headless/composable architecture
 
-For each platform:
-1. Provide an overall fit score (0-1) where 1 is perfect fit
-2. List 3 key strengths relative to CINCH needs
-3. List 3 key weaknesses
-4. Identify the best use case it supports for CINCH
+## CINCH'S PRIORITY USE CASES (evaluate against these specifically):
+{use_case_context}
 
+## PLATFORM TO EVALUATE: {', '.join(PLATFORMS_DATA.keys())}
+
+For each platform, provide:
+
+1. **overall_fit_score** (0.0-1.0): How well does this platform support CINCH's consolidation goals? Score based on:
+   - Ability to improve conversion rates (weight: 25%)
+   - Speed of experimentation/A/B testing (weight: 25%)  
+   - Operational efficiency for multi-property management (weight: 20%)
+   - Future flexibility and composability (weight: 15%)
+   - Total cost of ownership fit (weight: 15%)
+
+2. **strengths** (exactly 3): Specific capabilities that help CINCH achieve:
+   - Better conversion rates on paid landing pages
+   - Faster enrollment funnel optimization
+   - Easier multi-property content governance
+   Example: "Native A/B testing allows optimizing enrollment CTAs without developer involvement"
+
+3. **weaknesses** (exactly 3): Specific gaps that would hurt CINCH's goals:
+   Example: "No built-in personalization requires integrating 3rd party CDP, adding $50K+ annual cost"
+
+4. **best_for_use_case**: Which of CINCH's use cases (paid_landing_pages, enrollment_funnel, multi_property_management, legacy_consolidation) is this platform BEST suited for and WHY in one sentence.
+
+Be specific to CINCH's situation. Avoid generic CMS marketing language.
 Return as structured JSON matching the schema provided.
 """
                     
