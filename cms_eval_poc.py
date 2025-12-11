@@ -698,19 +698,22 @@ with tab4:
     if 'stack_recommendations' not in st.session_state:
         st.session_state.stack_recommendations = None
     
-    # Provider selection for stack analysis
-    st.info(f"🤖 Using {provider_type} for stack recommendations")
+    # Get provider type - default to OpenAI if not in AI mode
+    current_provider = provider_type if 'provider_type' in dir() else "OpenAI (Cloud)"
+    st.info(f"🤖 Using {current_provider} for stack recommendations")
     
     if st.button("🚀 Generate AI Stack Recommendations", type="primary"):
-        with st.spinner("Analyzing optimal technology stacks for CINCH..."):
+        with st.spinner("Analyzing optimal technology stacks..."):
             try:
                 # Get provider based on sidebar selection
-                if provider_type == "Ollama (Local)":
+                if 'provider_type' in dir() and provider_type == "Ollama (Local)":
                     stack_provider = get_provider("ollama", model=ollama_model, host=ollama_host)
-                elif provider_type == "OpenAI (Cloud)":
+                elif 'provider_type' in dir() and provider_type == "OpenAI (Cloud)":
                     stack_provider = get_provider("openai")
-                else:
+                elif 'provider_type' in dir():
                     stack_provider = get_provider("anthropic")
+                else:
+                    stack_provider = get_provider("openai")  # Default
                 
                 stack_schema = {
                     "type": "object",
