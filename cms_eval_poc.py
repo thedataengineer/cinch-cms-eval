@@ -941,8 +941,8 @@ Pursue a **phased migration** approach using the Strangler Fig pattern to gradua
         if st.button("📊 Export to PPTX", type="primary"):
             try:
                 from pptx import Presentation
-                from pptx.util import Inches, Pt
-                from pptx.dml.color import RgbColor
+                from pptx.util import Inches, Pt, Emu
+                from pptx.util import RGBColor  # Correct import path
                 from pptx.enum.text import PP_ALIGN
                 import io
                 
@@ -955,12 +955,12 @@ Pursue a **phased migration** approach using the Strangler Fig pattern to gradua
                     for paragraph in shape.text_frame.paragraphs:
                         paragraph.font.size = Pt(font_size)
                         paragraph.font.bold = bold
-                        paragraph.font.color.rgb = RgbColor(0x1E, 0x3A, 0x5F)  # Dark blue
+                        paragraph.font.color.rgb = RGBColor(0x1E, 0x3A, 0x5F)  # Dark blue
                 
                 def style_body(shape, font_size=24):
                     for paragraph in shape.text_frame.paragraphs:
                         paragraph.font.size = Pt(font_size)
-                        paragraph.font.color.rgb = RgbColor(0x33, 0x33, 0x33)  # Dark gray
+                        paragraph.font.color.rgb = RGBColor(0x33, 0x33, 0x33)  # Dark gray
                 
                 # Slide 1: Title
                 slide = prs.slides.add_slide(prs.slide_layouts[6])  # Blank
@@ -969,14 +969,14 @@ Pursue a **phased migration** approach using the Strangler Fig pattern to gradua
                 tf.text = "CMS Evaluation Report"
                 tf.paragraphs[0].font.size = Pt(54)
                 tf.paragraphs[0].font.bold = True
-                tf.paragraphs[0].font.color.rgb = RgbColor(0x1E, 0x3A, 0x5F)
+                tf.paragraphs[0].font.color.rgb = RGBColor(0x1E, 0x3A, 0x5F)
                 tf.paragraphs[0].alignment = PP_ALIGN.CENTER
                 
                 subtitle = slide.shapes.add_textbox(Inches(0.5), Inches(4.5), Inches(12), Inches(1))
                 stf = subtitle.text_frame
                 stf.text = f"Home Warranty Company | {datetime.now().strftime('%B %Y')}"
                 stf.paragraphs[0].font.size = Pt(28)
-                stf.paragraphs[0].font.color.rgb = RgbColor(0x66, 0x66, 0x66)
+                stf.paragraphs[0].font.color.rgb = RGBColor(0x66, 0x66, 0x66)
                 stf.paragraphs[0].alignment = PP_ALIGN.CENTER
                 
                 # Slide 2: Executive Summary
@@ -992,7 +992,7 @@ Pursue a **phased migration** approach using the Strangler Fig pattern to gradua
                 p.text = "Current Situation"
                 p.font.bold = True
                 p.font.size = Pt(28)
-                p.font.color.rgb = RgbColor(0x2E, 0x86, 0xAB)
+                p.font.color.rgb = RGBColor(0x2E, 0x86, 0xAB)
                 
                 bullets = ["• Operating across 5 CMS platforms (HubSpot, Liferay, Ion, Starmark, Surefire)",
                           "• HubSpot is underperforming for conversion optimization",
@@ -1023,11 +1023,11 @@ Pursue a **phased migration** approach using the Strangler Fig pattern to gradua
                     p.text = f"{heading}: {platform}"
                     p.font.size = Pt(26)
                     p.font.bold = True
-                    p.font.color.rgb = RgbColor(0x28, 0xA7, 0x45)
+                    p.font.color.rgb = RGBColor(0x28, 0xA7, 0x45)
                     p = tf.add_paragraph()
                     p.text = desc
                     p.font.size = Pt(20)
-                    p.font.color.rgb = RgbColor(0x66, 0x66, 0x66)
+                    p.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
                     y_pos += 1.8
                 
                 # Slide 4: Migration Strategy
@@ -1059,7 +1059,7 @@ Pursue a **phased migration** approach using the Strangler Fig pattern to gradua
                     p.text = line
                     p.font.size = Pt(22) if not line.startswith("   ") else Pt(18)
                     p.font.bold = not line.startswith("   ") and line != ""
-                    p.font.color.rgb = RgbColor(0x1E, 0x3A, 0x5F) if not line.startswith("   ") else RgbColor(0x55, 0x55, 0x55)
+                    p.font.color.rgb = RGBColor(0x1E, 0x3A, 0x5F) if not line.startswith("   ") else RGBColor(0x55, 0x55, 0x55)
                 
                 # Slide 5: Next Steps
                 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -1084,7 +1084,7 @@ Pursue a **phased migration** approach using the Strangler Fig pattern to gradua
                     p.text = step
                     p.font.size = Pt(26)
                     p.space_before = Pt(18)
-                    p.font.color.rgb = RgbColor(0x33, 0x33, 0x33)
+                    p.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
                 
                 buffer = io.BytesIO()
                 prs.save(buffer)
