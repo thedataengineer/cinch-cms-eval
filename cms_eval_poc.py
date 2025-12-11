@@ -687,81 +687,158 @@ with tab3:
         st.dataframe(outcome_weights_df, use_container_width=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TAB 3: Recommended Stacks
+# TAB 4: AI-Driven Recommended Stacks
 # ─────────────────────────────────────────────────────────────────────────────
 
 with tab4:
-    st.header("Recommended Architecture Patterns")
+    st.header("🏗️ AI-Recommended Architecture Stacks")
+    st.markdown("**Get personalized stack recommendations based on CINCH's specific requirements**")
     
-    st.markdown("### Option A: HubSpot + Headless CMS for Experimentation")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.write("""
-**Stack:**
-- HubSpot: CRM + marketing automation
-- Contentful/Sanity: Headless CMS for enrollment content
-- Optimizely/VWO: Dedicated A/B testing layer
-
-**Pros:**
-✅ Leverage HubSpot CRM investment
-✅ Fast experimentation on landing pages
-✅ Decoupled front-end = flexible design
-
-**Cons:**
-❌ 3-platform coordination
-❌ Content still fragmented
-        """)
-    with col2:
-        st.metric("Fit Score", "0.72", "Good fit for paid funnel")
+    # Initialize session state for stack recommendations
+    if 'stack_recommendations' not in st.session_state:
+        st.session_state.stack_recommendations = None
     
-    st.markdown("---")
+    # Provider selection for stack analysis
+    st.info(f"🤖 Using {provider_type} for stack recommendations")
     
-    st.markdown("### Option B: Pure Headless + Personalization Platform")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.write("""
-**Stack:**
-- Contentful: Primary headless CMS
-- Segment/mParticle: CDP for personalization
-- Any front-end (Next.js, etc.)
-- HubSpot: CRM only
+    if st.button("🚀 Generate AI Stack Recommendations", type="primary"):
+        with st.spinner("Analyzing optimal technology stacks for CINCH..."):
+            try:
+                # Get provider based on sidebar selection
+                if provider_type == "Ollama (Local)":
+                    stack_provider = get_provider("ollama", model=ollama_model, host=ollama_host)
+                elif provider_type == "OpenAI (Cloud)":
+                    stack_provider = get_provider("openai")
+                else:
+                    stack_provider = get_provider("anthropic")
+                
+                stack_schema = {
+                    "type": "object",
+                    "properties": {
+                        "recommended_stacks": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {"type": "string"},
+                                    "fit_score": {"type": "number"},
+                                    "components": {"type": "array", "items": {"type": "string"}},
+                                    "pros": {"type": "array", "items": {"type": "string"}},
+                                    "cons": {"type": "array", "items": {"type": "string"}},
+                                    "migration_approach": {"type": "string"},
+                                    "timeline_months": {"type": "integer"},
+                                    "cost_tier": {"type": "string"},
+                                    "best_for": {"type": "string"}
+                                }
+                            }
+                        },
+                        "top_recommendation": {"type": "string"},
+                        "migration_strategy": {"type": "string"}
+                    }
+                }
+                
+                # Build use case context
+                use_case_labels = [CMS_ONTOLOGY['use_cases'][uc]['label'] for uc in selected_use_cases]
+                
+                stack_prompt = f"""
+Based on CINCH's specific situation, recommend 3 technology stack options:
 
-**Pros:**
-✅ True headless architecture
-✅ Best content flexibility
-✅ Omnichannel ready
-✅ Modern DX for developers
+## CINCH CONTEXT
+- Currently on HubSpot CMS which is FAILING at conversion optimization
+- Operating across 5 legacy CMS: HubSpot, Liferay, Ion (~9yr), Starmark (~9yr), Surefire
+- Need to consolidate to 3 platforms (1 won't work)
+- Traffic: 20K paid views/day, 6-7K unique visitors
+- Primary goal: IMPROVE CONVERSION RATES
+- Avoid: Sitecore (too expensive), Liferay (too lightweight)
+- Considering: Contentful as an option
 
-**Cons:**
-❌ Requires front-end team
-❌ No native A/B testing
-        """)
-    with col2:
-        st.metric("Fit Score", "0.85", "Best for long-term flexibility")
+## PRIORITY USE CASES
+{chr(10).join(['- ' + uc for uc in use_case_labels])}
+
+## AVAILABLE PLATFORMS TO INCLUDE
+{', '.join(PLATFORMS_DATA.keys())}
+
+For each of the 3 stack options, provide:
+1. **name**: Descriptive stack name (e.g., "Headless + CDP Stack")
+2. **fit_score**: 0.0-1.0 based on CINCH's requirements
+3. **components**: List of 3-5 specific technologies (e.g., ["Contentful", "Segment CDP", "Next.js", "HubSpot CRM"])
+4. **pros**: 3 specific benefits addressing HubSpot's failures
+5. **cons**: 2-3 honest drawbacks
+6. **migration_approach**: "strangler_fig", "phased", or "big_bang"
+7. **timeline_months**: Realistic implementation timeline
+8. **cost_tier**: "$", "$$", or "$$$"
+9. **best_for**: Which of CINCH's use cases this stack excels at
+
+Also provide:
+- **top_recommendation**: Which stack you recommend and why (1-2 sentences)
+- **migration_strategy**: Recommended approach to move from 5 CMS to 3 platforms (2-3 sentences)
+
+Be specific to CINCH. Consider their HubSpot pain points.
+Return as structured JSON.
+"""
+                
+                response = stack_provider.chat(stack_prompt, stack_schema)
+                st.session_state.stack_recommendations = response.content
+                st.success("✅ Stack recommendations generated!")
+                
+            except Exception as e:
+                st.error(f"Error generating recommendations: {e}")
+                if provider_type == "OpenAI (Cloud)":
+                    st.info("💡 Tip: Make sure your OPENAI_API_KEY is set in Streamlit secrets.")
     
-    st.markdown("---")
-    
-    st.markdown("### Option C: Composable CMS (All-in-one modern approach)")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.write("""
-**Stack:**
-- Composable CMS (Acquia/Agility): Headless + native personalization
-- HubSpot: CRM + marketing automation
-- CDN: Performance layer
-
-**Pros:**
-✅ Unified content + experimentation
-✅ SaaS simplicity
-✅ Omnichannel by design
-✅ Strong vendor support
-
-**Cons:**
-❌ Higher cost
-❌ Newer ecosystem
-        """)
-    with col2:
-        st.metric("Fit Score", "0.88", "Balanced & modern")
+    # Display recommendations if available
+    if st.session_state.stack_recommendations:
+        recs = st.session_state.stack_recommendations
+        
+        # Top recommendation banner
+        if "top_recommendation" in recs:
+            st.success(f"🏆 **Top Recommendation:** {recs['top_recommendation']}")
+        
+        if "migration_strategy" in recs:
+            st.info(f"📋 **Migration Strategy:** {recs['migration_strategy']}")
+        
+        st.markdown("---")
+        
+        # Display each stack
+        for i, stack in enumerate(recs.get("recommended_stacks", [])[:3]):
+            st.markdown(f"### Option {chr(65+i)}: {stack.get('name', 'Stack ' + str(i+1))}")
+            
+            col1, col2, col3 = st.columns([2, 1, 1])
+            
+            with col1:
+                st.markdown("**Components:**")
+                for comp in stack.get("components", []):
+                    st.write(f"  • {comp}")
+                
+                st.markdown("**Pros:**")
+                for pro in stack.get("pros", []):
+                    st.write(f"  ✅ {pro}")
+                
+                st.markdown("**Cons:**")
+                for con in stack.get("cons", []):
+                    st.write(f"  ❌ {con}")
+            
+            with col2:
+                st.metric("Fit Score", f"{stack.get('fit_score', 0):.2f}")
+                st.metric("Timeline", f"{stack.get('timeline_months', '?')} months")
+                st.metric("Cost Tier", stack.get("cost_tier", "$$"))
+            
+            with col3:
+                st.markdown("**Migration:**")
+                approach = stack.get("migration_approach", "phased")
+                if approach == "strangler_fig":
+                    st.write("🌿 Strangler Fig (gradual)")
+                elif approach == "big_bang":
+                    st.write("💥 Big Bang (all at once)")
+                else:
+                    st.write("📦 Phased (batch cutover)")
+                
+                st.markdown("**Best For:**")
+                st.write(stack.get("best_for", "General use"))
+            
+            st.markdown("---")
+    else:
+        st.info("👆 Click the button above to generate AI-powered stack recommendations based on CINCH's specific requirements.")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TAB 4: Report
