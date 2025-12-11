@@ -350,6 +350,39 @@ with st.sidebar:
                 st.success("✅ Claude API key configured")
             else:
                 st.warning("⚠️ Set ANTHROPIC_API_KEY environment variable")
+        
+        # Custom Prompt Section
+        st.markdown("---")
+        with st.expander("🔧 Custom Prompt (Advanced)", expanded=False):
+            st.markdown("**Customize the business context for AI analysis:**")
+            
+            default_context = """The company is currently using HubSpot for CMS, which is essentially a CRM with an added CMS module.
+HubSpot is NOT meeting expectations for improving conversions and driving enrollments - this is the PRIMARY pain point.
+Currently operating across FIVE different content management systems:
+- HubSpot (current primary, underperforming)
+- Liferay (legacy)
+- Ion (~9 years in use)
+- Starmark (~9 years in use)
+- Surefire (legacy)
+
+BUSINESS GOALS:
+- Primary goal: IMPROVE CONVERSION RATES
+- Traffic: ~20,000 paid views/day, 6,000-7,000 unique visitors
+- Need to consolidate to 3 platforms (1 won't work)
+
+CONSTRAINTS:
+- Do NOT want large enterprise CMS like Sitecore
+- Do NOT want lightweight/limited/free platforms
+- Considering Contentful as an option"""
+            
+            custom_context = st.text_area(
+                "Business Context:",
+                value=default_context,
+                height=300,
+                help="Modify this context to customize AI analysis for your specific situation"
+            )
+            
+            st.session_state['custom_context'] = custom_context
 
 # Main content: Tabs
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Platform Scores", "🌐 Live Data", "📋 Ontology", "🏗️ Recommended Stacks", "📄 Report"])
@@ -461,32 +494,18 @@ with tab1:
                         for uc in selected_use_cases
                     ])
                     
+                    # Get custom context from session state if available
+                    business_context = st.session_state.get('custom_context', """The company is currently using HubSpot for CMS, which is essentially a CRM with an added CMS module.
+HubSpot is NOT meeting expectations for improving conversions and driving enrollments - this is the PRIMARY pain point.
+Currently operating across FIVE different content management systems.""")
+                    
                     prompt = f"""
-You are evaluating CMS platforms for CINCH with this SPECIFIC business context:
+You are evaluating CMS platforms with this SPECIFIC business context:
 
-## CURRENT SITUATION
-- CINCH is currently using HubSpot for CMS, which is essentially a CRM with an added CMS module
-- **HubSpot is NOT meeting expectations** for improving conversions and driving enrollments - this is the PRIMARY pain point
-- Currently operating across FIVE different content management systems:
-  * HubSpot (current primary, underperforming)
-  * Liferay (legacy)
-  * Ion (~9 years in use)
-  * Starmark (~9 years in use)
-  * Surefire (legacy)
-- HubSpot was expected to unify these 5 systems but that has NOT materialized
+## BUSINESS CONTEXT (from user input)
+{business_context}
 
-## BUSINESS GOALS
-- **Primary goal: IMPROVE CONVERSION RATES** - HubSpot is failing here
-- Traffic: ~20,000 paid views/day, 6,000-7,000 unique visitors exploring options
-- Originally wanted to consolidate to 1 CMS, but realistically need 3 platforms (one won't address all requirements)
-
-## CONSTRAINTS
-- Do NOT want large enterprise CMS like Sitecore (too expensive/complex)
-- Do NOT want lightweight/limited/free platform like Liferay
-- Considering Contentful as a potential option
-- Need a COMPARATIVE evaluation to make an informed decision
-
-## CINCH'S PRIORITY USE CASES:
+## PRIORITY USE CASES:
 {use_case_context}
 
 ## PLATFORMS TO EVALUATE: {', '.join(PLATFORMS_DATA.keys())}
@@ -494,25 +513,21 @@ You are evaluating CMS platforms for CINCH with this SPECIFIC business context:
 For each platform, provide:
 
 1. **overall_fit_score** (0.0-1.0): Score based on:
-   - Can it FIX what HubSpot is failing at (conversion optimization)? (weight: 30%)
+   - Can it FIX conversion optimization problems? (weight: 30%)
    - Speed of experimentation/A/B testing (weight: 25%)  
-   - Ability to consolidate legacy systems (Ion, Starmark, Surefire) (weight: 20%)
+   - Ability to consolidate legacy systems (weight: 20%)
    - Future flexibility and composability (weight: 15%)
-   - Total cost of ownership (avoid Sitecore pricing) (weight: 10%)
+   - Total cost of ownership (weight: 10%)
 
-2. **strengths** (exactly 3): Specific capabilities that address CINCH's HubSpot pain points:
-   - What can this platform do that HubSpot cannot for conversion optimization?
-   - How does it help consolidate the 5-system mess?
-   Example: "Native A/B testing allows optimizing enrollment CTAs without developer involvement - unlike HubSpot"
+2. **strengths** (exactly 3): Specific capabilities that address the pain points described above.
+   Example: "Native A/B testing allows optimizing CTAs without developer involvement"
 
-3. **weaknesses** (exactly 3): Specific gaps relative to CINCH's needs:
-   - Would this platform repeat HubSpot's mistakes?
-   - Integration challenges with existing systems?
+3. **weaknesses** (exactly 3): Specific gaps relative to the stated needs.
    Example: "No built-in personalization requires integrating 3rd party CDP, adding $50K+ annual cost"
 
-4. **best_for_use_case**: Which of CINCH's use cases (paid_landing_pages, enrollment_funnel, multi_property_management, legacy_consolidation) is this platform BEST suited for and WHY in one sentence.
+4. **best_for_use_case**: Which use case (paid_landing_pages, enrollment_funnel, multi_property_management, legacy_consolidation) is this platform BEST suited for and WHY in one sentence.
 
-Be brutally honest. Compare against HubSpot's failures. Avoid marketing language.
+Be brutally honest. Avoid marketing language.
 Return as structured JSON matching the schema provided.
 """
                     
